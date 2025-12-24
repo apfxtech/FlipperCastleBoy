@@ -1,10 +1,10 @@
-#include "game.h"
+#include "game/game.h"
 
-#include "menu.h"
-#include "map.h"
-#include "player.h"
-#include "entity.h"
-#include "assets.h"
+#include "game/menu.h"
+#include "game/map.h"
+#include "game/player.h"
+#include "game/entity.h"
+#include "game/assets.h"
 
 int16_t Game::cameraX;
 uint8_t Game::life;

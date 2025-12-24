@@ -1,9 +1,9 @@
-#include "menu.h"
+#include "game/menu.h"
 
-#include "game.h"
-#include "player.h"
-#include "map.h"
-#include "assets.h"
+#include "game/game.h"
+#include "game/player.h"
+#include "game/map.h"
+#include "game/assets.h"
 
 #define TITLE_OPTION_MAX 2
 #define TITLE_OPTION_PLAY 0

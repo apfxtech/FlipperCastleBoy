@@ -1,9 +1,9 @@
-#include "entity.h"
+#include "game/entity.h"
 
-#include "game.h"
-#include "map.h"
-#include "player.h"
-#include "assets.h"
+#include "game/game.h"
+#include "game/map.h"
+#include "game/player.h"
+#include "game/assets.h"
 
 // TODO handling of hurt, can be handled by entity update so we can delegate specific code instead of hacking in damage function
 // FIXME everyXFrames is not precise enough, maybe each entity should have it's own frame counter? --> at least for bone projectile

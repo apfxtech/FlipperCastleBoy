@@ -1,10 +1,10 @@
-#include "global.h"
+#include "game/global.h"
 
-#include "assets.h"
+#include "game/assets.h"
 
 Arduboy2Base ab;
 Sprites sprites;
-ArduboyTones sound(ab.audio.enabled);
+ArduboyTones sound(ab.audio.enabled());
 uint8_t mainState;
 uint8_t flashCounter = 0;
 
@@ -36,9 +36,10 @@ bool Util::collideRect(int16_t x1, int8_t y1, uint8_t width1, uint8_t height1, i
 void Util::drawNumber(int16_t x, int16_t y, uint16_t value, uint8_t align)
 {
   char buf[10];
-  ltoa(value, buf, 10);
+  snprintf(buf, sizeof(buf), "%u", (unsigned)value);
+
   uint8_t strLength = strlen(buf);
-  int8_t offset;
+  int8_t offset = 0;
   switch (align)
   {
     case ALIGN_LEFT:
@@ -73,7 +74,7 @@ int freeRam()
 }
 
 #ifdef DEBUG_LOG
-#include "menu.h"
+#include "game/menu.h"
 int16_t debugValue = 0;
 void drawDebugLog()
 {
@@ -82,7 +83,7 @@ void drawDebugLog()
 #endif
 
 #ifdef DEBUG_CPU
-#include "menu.h"
+#include "game/menu.h"
 void drawDebugCpu()
 {
   Util::drawNumber(128, 0, ab.cpuLoad(), ALIGN_RIGHT);
@@ -90,7 +91,7 @@ void drawDebugCpu()
 #endif
 
 #ifdef DEBUG_RAM
-#include "menu.h"
+#include "game/menu.h"
 void drawDebugRam()
 {
   extern int __heap_start, *__brkval;

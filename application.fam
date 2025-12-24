@@ -1,6 +1,6 @@
 App(
-    appid="apfx_lqp79",
-    name="VIRUS LQP-79",
+    appid="apfx_castleboy",
+    name="CastleBoy",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="mybl_app",
     cdefines=["APP_MYBL_AP"],

@@ -1,8 +1,8 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "global.h"
-#include "entity.h"
+#include "game/global.h"
+#include "game/entity.h"
 
 namespace Map
 {

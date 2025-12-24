@@ -1,7 +1,7 @@
 #include "global.h"
 
-#include "menu.h"
-#include "game.h"
+#include "game/menu.h"
+#include "game/game.h"
 #include "assets.h"
 
 uint8_t bootCounter = 0;

@@ -1,7 +1,7 @@
 #ifndef CANDLE_H
 #define CANDLE_H
 
-#include "global.h"
+#include "game/global.h"
 
 struct Entity
 {

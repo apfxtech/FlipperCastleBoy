@@ -59,70 +59,56 @@ static void input_events_callback(const void* value, void* ctx) {
     Arduboy2Base::FlipperInputCallback(e, ctx);
 }
 
-#define GAME_ID 40
+#include "game/global.h"
+#include "game/menu.h"
+#include "game/game.h"
+#include "game/assets.h"
 
-#include "./game/globals.h"
-#include "./game/menu.h"
-#include "./game/player.h"
-#include "./game/enemies.h"
-#include "./game/game.h"
-#include "./game/elements.h"
-#include "./game/bitmaps.h"
-#include "./game/level.h"
-
-using FunctionPointer = void (*)();
-static FunctionPointer mainGameLoop[] = {
-    stateMenuIntro,
-    stateMenuMain,
-    stateMenuHelp,
-    stateMenuPlay,
-    stateMenuInfo,
-    stateMenuSoundfx,
-    stateGamePrepareLevel,
-    stateGameNextLevel,
-    stateGamePlaying,
-    stateGameOver,
-    stateGamePause,
-    stateGameEnd,
-    stateGameNew,
-    stateGameContinue,
-    stateGameMayhem,
-};
+uint8_t bootCounter = 0;
 
 static void game_setup() {
-    arduboy.boot();
-    arduboy.audio.begin();
-    arduboy.bootLogoSpritesSelfMasked();
-    arduboy.setFrameRate(ARDUBOY_FRAMERATE);
-    gameID = GAME_ID;
+  ab.setFrameRate(FPS);
+  Menu::showTitle();
 }
 
-static uint8_t exit_hold_frames = 0;
+static void game_loop_tick() 
+{
+  if (!ab.nextFrame())
+  {
+    return;
+  }
 
-static void game_loop_tick() {
-    if(!(arduboy.nextFrame())) return;
+  ab.clear();
+  
+  if(bootCounter < 120)
+  {
+    bootCounter++;
+    sprites.drawOverwrite(49, 14, logo, 0);
+    ab.display();
+    return;
+  }
 
-    arduboy.pollButtons();
+  ab.pollButtons();
+  Menu::loop();
 
-    if(arduboy.pressed(A_BUTTON)) {
-        if(exit_hold_frames < HOLD_TO_EXIT_FRAMES) {
-            exit_hold_frames++;
-        } else {
-            EEPROM.commit();
-            if(gameState < 6) {
-                if(g_state) g_state->exit_requested = true;
-            } else {
-                gameState = STATE_MENU_INTRO;
-                exit_hold_frames = 0;
-            }
-        }
-    } else {
-        exit_hold_frames = 0;
-    }
+#ifdef DEBUG_LOG
+  drawDebugLog();
+#endif
 
-    arduboy.clear();
-    mainGameLoop[gameState]();
-    arduboy.display();
+#ifdef DEBUG_CPU
+  drawDebugCpu();
+#endif
+
+#ifdef DEBUG_RAM
+  drawDebugRam();
+#endif
+
+  if (flashCounter > 0)
+  {
+    ab.fillRect(0, 0, 128, 64, WHITE);
+    flashCounter--;
+  }
+  ab.display();
 }
 
 static void framebuffer_commit_callback(
@@ -140,11 +126,9 @@ static void framebuffer_commit_callback(
     const uint8_t* src = state->front_buffer;
 
     for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        if(gameState > 6) {
-            data[i] = (uint8_t)(src[i] ^ 0x00);
-        } else {
+ 
             data[i] = (uint8_t)(src[i] ^ 0xFF);
-        }
+        
     }
 
     furi_mutex_release(state->fb_mutex);
@@ -230,8 +214,8 @@ extern "C" int32_t mybl_app(void* p) {
     memset(g_state->prev2_buffer, 0x00, BUFFER_SIZE);
 #endif
 
-    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex);
-    Sprites::setArduboy(&arduboy);
+    ab.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex);
+    Sprites::setArduboy(&ab);
 
     g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
     gui_add_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
@@ -239,7 +223,7 @@ extern "C" int32_t mybl_app(void* p) {
 
     g_state->input_events = (FuriPubSub*)furi_record_open(RECORD_INPUT_EVENTS);
     g_state->input_sub = furi_pubsub_subscribe(
-        g_state->input_events, input_events_callback, arduboy.inputContext());
+        g_state->input_events, input_events_callback, ab.inputContext());
 
     // Setup game and do one initial draw
     furi_mutex_acquire(g_state->game_mutex, FuriWaitForever);
