@@ -1,8 +1,13 @@
+// lib/ArduboyTones.h
 #pragma once
 #include <stdint.h>
 #include <furi.h>
 #include <furi_hal.h>
+
 #include "ArduboyTonesPitches.h"
+#include "EEPROM.h"
+
+using uint24_t = uint32_t;
 
 #ifndef TONES_END
 #define TONES_END 0x8000
@@ -20,9 +25,9 @@
 #define ARDUBOY_TONES_TICK_HZ 780u
 #endif
 
-#define VOLUME_IN_TONE 0
+#define VOLUME_IN_TONE       0
 #define VOLUME_ALWAYS_NORMAL 1
-#define VOLUME_ALWAYS_HIGH 2
+#define VOLUME_ALWAYS_HIGH   2
 
 #ifndef MAX_TONES
 #define MAX_TONES 3
@@ -40,20 +45,18 @@ typedef struct {
     const uint16_t* pattern;
 } ArduboyToneSoundRequest;
 
-static FuriMessageQueue* g_arduboy_sound_queue = NULL;
-static FuriThread* g_arduboy_sound_thread = NULL;
-static volatile bool g_arduboy_sound_thread_running = false;
-static volatile bool g_arduboy_audio_enabled = false;
+extern FuriMessageQueue* g_arduboy_sound_queue;
+extern FuriThread* g_arduboy_sound_thread;
+extern volatile bool g_arduboy_sound_thread_running;
+extern volatile bool g_arduboy_audio_enabled;
+extern volatile bool g_arduboy_tones_playing;
+extern volatile uint8_t g_arduboy_volume_mode;
+extern volatile bool g_arduboy_force_high;
+extern volatile bool g_arduboy_force_norm;
 
-static volatile bool g_arduboy_tones_playing = false;
-
-static volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
-static volatile bool g_arduboy_force_high = false;
-static volatile bool g_arduboy_force_norm = false;
-
-static const float kArduboyToneSoundVolumeNormal = 1.0f;
-static const float kArduboyToneSoundVolumeHigh = 1.0f;
-static const uint32_t kArduboyToneToneTickHz = ARDUBOY_TONES_TICK_HZ;
+static constexpr float kArduboyToneSoundVolumeNormal = 1.0f;
+static constexpr float kArduboyToneSoundVolumeHigh = 1.0f;
+static constexpr uint32_t kArduboyToneToneTickHz = ARDUBOY_TONES_TICK_HZ;
 
 static inline uint32_t arduboy_tone_ticks_to_ms(uint16_t ticks) {
     return (uint32_t)((ticks * 1000u + (kArduboyToneToneTickHz / 2)) / kArduboyToneToneTickHz);
@@ -61,9 +64,12 @@ static inline uint32_t arduboy_tone_ticks_to_ms(uint16_t ticks) {
 
 static inline float arduboy_tone_volume_for(uint16_t freq_word) {
     bool want_high = false;
-    if(g_arduboy_force_norm) want_high = false;
-    else if(g_arduboy_force_high) want_high = true;
-    else want_high = ((freq_word & TONE_HIGH_VOLUME) != 0);
+    if(g_arduboy_force_norm)
+        want_high = false;
+    else if(g_arduboy_force_high)
+        want_high = true;
+    else
+        want_high = ((freq_word & TONE_HIGH_VOLUME) != 0);
     return want_high ? kArduboyToneSoundVolumeHigh : kArduboyToneSoundVolumeNormal;
 }
 
@@ -214,10 +220,10 @@ static void arduboy_tone_sound_system_deinit() {
 class ArduboyAudio {
 public:
     void begin() {
-        if(!g_arduboy_audio_enabled) {
-            g_arduboy_audio_enabled = true;
-            arduboy_tone_sound_system_init();
-        }
+        if(EEPROM.read(2))
+            on();
+        else
+            off();
     }
 
     void on() {
@@ -238,11 +244,14 @@ public:
         }
     }
 
-    bool enabled() const {
+    static bool enabled() {
         return g_arduboy_audio_enabled;
     }
 
-    void saveOnOff() {}
+    void saveOnOff() {
+        EEPROM.update(2, g_arduboy_audio_enabled);
+        EEPROM.commit();
+    }
 };
 
 class ArduboyTones {
@@ -261,8 +270,10 @@ public:
         g_arduboy_volume_mode = mode;
         g_arduboy_force_high = false;
         g_arduboy_force_norm = false;
-        if(mode == VOLUME_ALWAYS_NORMAL) g_arduboy_force_norm = true;
-        else if(mode == VOLUME_ALWAYS_HIGH) g_arduboy_force_high = true;
+        if(mode == VOLUME_ALWAYS_NORMAL)
+            g_arduboy_force_norm = true;
+        else if(mode == VOLUME_ALWAYS_HIGH)
+            g_arduboy_force_high = true;
     }
 
     static bool playing() {

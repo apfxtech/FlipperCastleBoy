@@ -12,7 +12,7 @@
 #define TONES_END    0x8000
 
 // ====== НАСТРОЙКИ ======
-#define TARGET_FRAMERATE         30
+#define TARGET_FRAMERATE         60
 #define ARDUBOY_FRAMERATE        60
 #define GHOST_COMPENSATION_LEVEL 0
 
@@ -22,6 +22,18 @@
 
 #include "lib/Arduboy2.h"
 #include "lib/Arduino.h"
+#include "lib/ArduboyTones.h"
+
+FuriMessageQueue* g_arduboy_sound_queue = NULL;
+FuriThread* g_arduboy_sound_thread = NULL;
+volatile bool g_arduboy_sound_thread_running = false;
+volatile bool g_arduboy_audio_enabled = false;
+
+volatile bool g_arduboy_tones_playing = false;
+
+volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
+volatile bool g_arduboy_force_high = false;
+volatile bool g_arduboy_force_norm = false;
 
 #define DISPLAY_WIDTH  128
 #define DISPLAY_HEIGHT 64
