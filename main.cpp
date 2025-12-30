@@ -80,6 +80,7 @@ uint8_t bootCounter = 0;
 
 static void game_setup() {
   ab.setFrameRate(FPS);
+  ab.audio.begin();
   Menu::showTitle();
 }
 
