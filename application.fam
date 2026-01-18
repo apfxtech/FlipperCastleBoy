@@ -1,5 +1,5 @@
 App(
-    appid="apfx_castleboy",
+    appid="castleboy",
     name="CastleBoy",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="mybl_app",
